@@ -1,6 +1,9 @@
 import { Hono } from 'hono'
-
-const app = new Hono()
+const app = new Hono<{
+	Bindings: {
+		DATABASE_URL: string
+	}
+}>();
 
 app.get('/', (c) => {
   return c.text('Hello Hono!')
