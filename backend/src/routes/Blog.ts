@@ -35,18 +35,53 @@ const result=await prisma.post.findMany({
 })
 return c.text(JSON.stringify(result));
 })
-BlogRouter.get("/:id",(c:any)=>{
+BlogRouter.get("/:id",async(c:any)=>{
   const id=c.req.param('id');
-  console.log(id);
-  return c.text('blog id');
+  const prisma=await new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,}).$extends(withAccelerate());
+    const result=await prisma.post.findUnique({
+        //@ts-ignore
+        where:{
+            id:id
+        }
+    })
+    return c.json({result});
 
 })
-BlogRouter.put("/:id",(c:any)=>{
+BlogRouter.put("/:id",async(c:any)=>{
   const id =c.req.param('id');
-  console.log(id);
-  return c.text('to update the blog');
+  const prisma = new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,}).$extends(withAccelerate());
+    const b=await c.req.json();
+    try{
+        await prisma.post.update({
+            //@ts-ignore
+
+            where:{
+                id:id
+            },
+            data:{
+                title:b.title,
+                content:b.content
+
+            }
+        })
+    }
+    catch(e){
+        return c.json({message:"Blog not found"});
+    }
+    return c.json({message:"Blog updated successfully"});
+
 })
 BlogRouter.delete("/:id",(c:any)=>{
   const id=c.req.param('id');
-  return c.text("to delete the blog");
+   const prisma = new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,}).$extends(withAccelerate());
+    const result=prisma.post.delete({
+        //@ts-ignore
+        where:{
+            id:id
+        }
+    })
+    return c.json({message:"Blog deleted successfully"});
 })
