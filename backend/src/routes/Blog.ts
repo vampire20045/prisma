@@ -1,22 +1,38 @@
 import {Hono} from 'hono';
 import { PrismaClient } from '@prisma/client';
 import { withAccelerate } from '@prisma/extension-accelerate';
+import { verify } from 'hono/jwt';
 export const BlogRouter=new Hono<{
 Bindings: {
 		DATABASE_URL: string
 	}
 }>
+const sec="Aryan";
+BlogRouter.use('/*',async(c,next:any)=>{
+  const token=c.req.header('Authorization');
+  if(!token){
+    return c.json({message:"incorrect token"});
+  }
+  const result=await verify(token,sec);
+  if(!result){
+    return c.json({message:"Invalid token"});
+  }
+  //@ts-ignore
+  c.set('userId',result.id);
+  await next();
+})
 BlogRouter.post('/',async(c:any)=>{
    const prisma = new PrismaClient({
     datasourceUrl: c.env.DATABASE_URL,
 }).$extends(withAccelerate());
+const authorId=c.get('userId');
 const b=await c.req.json();
 await prisma.post.create({
   data:{
     title:b.title,
     content:b.content,
     published:b.published,
-    authorId:"12"
+    authorId:authorId
   }
 
 })
